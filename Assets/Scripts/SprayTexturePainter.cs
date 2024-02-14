@@ -40,14 +40,28 @@ public class SprayTexturePainter : MonoBehaviour {
 		brushColor = colorPicker.color; //ColorSelector.GetColor ();	//Updates our painted color with the selected color
         var inputDevices = new List<UnityEngine.XR.InputDevice>();
         UnityEngine.XR.InputDevices.GetDevices(inputDevices);
-		if (controller.activateAction.action.ReadValue<float>() >0.5f)
+		if (controller.activateAction.action.ReadValue<float>() >0.3f)
 		{
-            DoAction();
+            DoAction(0.5f);
 			animator.SetBool("isSpray", true);
             audio.Play();
             particleSystem.Play();
         }
-		else
+        if (controller.activateAction.action.ReadValue<float>() > 0.5f)
+        {
+            DoAction(0.7f);
+            animator.SetBool("isSpray", true);
+            audio.Play();
+            particleSystem.Play();
+        }
+        if (controller.activateAction.action.ReadValue<float>() > 0.7f)
+        {
+            DoAction(1.5f);
+            animator.SetBool("isSpray", true);
+            audio.Play();
+            particleSystem.Play();
+        }
+        else
 		{
             animator.SetBool("isSpray", false);
             audio.Stop();
@@ -61,7 +75,7 @@ public class SprayTexturePainter : MonoBehaviour {
     }
 
 	//The main action, instantiates a brush or decal entity at the clicked position on the UV map
-	public void DoAction(){	
+	public void DoAction(float max){	
 		if (saving)
 			return;
 		Vector3 uvWorldPosition=Vector3.zero;		
@@ -72,7 +86,7 @@ public class SprayTexturePainter : MonoBehaviour {
 			brushObj.GetComponent<SpriteRenderer>().color=brushColor; //Set the brush color
             
 
-            brushColor.a=brushSize*2.0f; // Brushes have alpha to have a merging effect when painted over.
+            brushColor.a=brushSize*max; // Brushes have alpha to have a merging effect when painted over.
 			brushObj.transform.parent=brushContainer.transform; //Add the brush to our container to be wiped later
 			brushObj.transform.localPosition=uvWorldPosition; //The position of the brush (in the UVMap)
 			brushObj.transform.localScale=Vector3.one*brushSize;//The size of the brush
