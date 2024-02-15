@@ -9,10 +9,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.XR;
-using UnityEngine.XR.OpenXR.Input;
 using UnityEngine.InputSystem.XR;
 using System.Collections.Generic;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.InputSystem;
 
 //public enum Painter_BrushMode{PAINT,DECAL};
 public class SprayTexturePainter : MonoBehaviour {
@@ -23,6 +23,7 @@ public class SprayTexturePainter : MonoBehaviour {
 	public Animator animator;
 	public AudioSource audio;
 	public ActionBasedController controller;
+    public InputActionProperty pinchAnimationAction;
     public Camera sceneCamera,canvasCam;  //The camera that looks at the model, and the camera that looks at the canvas.
 	public Sprite cursorPaint,cursorDecal; // Cursor for the differen functions 
 	public RenderTexture canvasTexture; // Render Texture that looks at our Base Texture and the painted brushes
@@ -40,21 +41,22 @@ public class SprayTexturePainter : MonoBehaviour {
 		brushColor = colorPicker.color; //ColorSelector.GetColor ();	//Updates our painted color with the selected color
         var inputDevices = new List<UnityEngine.XR.InputDevice>();
         UnityEngine.XR.InputDevices.GetDevices(inputDevices);
-		if (controller.activateAction.action.ReadValue<float>() >0.3f)
+        float triggerValue = pinchAnimationAction.action.ReadValue<float>();
+        if (triggerValue > 0.3f)
 		{
             DoAction(0.5f);
 			animator.SetBool("isSpray", true);
             audio.Play();
             particleSystem.Play();
         }
-        if (controller.activateAction.action.ReadValue<float>() > 0.5f)
+        if (triggerValue > 0.5f)
         {
             DoAction(0.7f);
             animator.SetBool("isSpray", true);
             audio.Play();
             particleSystem.Play();
         }
-        if (controller.activateAction.action.ReadValue<float>() > 0.7f)
+        if (triggerValue > 0.7f)
         {
             DoAction(1.5f);
             animator.SetBool("isSpray", true);
