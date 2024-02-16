@@ -1,11 +1,4 @@
-﻿/// <summary>
-/// CodeArtist.mx 2015
-/// This is the main class of the project, its in charge of raycasting to a model and place brush prefabs infront of the canvas camera.
-/// If you are interested in saving the painted texture you can use the method at the end and should save it to a file.
-/// </summary>
-
-
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.XR;
@@ -16,47 +9,47 @@ using UnityEngine.InputSystem;
 
 //public enum Painter_BrushMode{PAINT,DECAL};
 public class SprayTexturePainter : MonoBehaviour {
-	public GameObject brushCursor,brushContainer; //The cursor that overlaps the model and our container for the brushes painted
+	public GameObject brushCursor,brushContainer; 
     public GameObject rcontroller;
 	public ParticleSystem particleSystem;
 	//public XRController controller;
 	public Animator animator;
 	public AudioSource audio;
-	public ActionBasedController controller;
+	//public ActionBasedController controller;
     public InputActionProperty pinchAnimationAction;
-    public Camera sceneCamera,canvasCam;  //The camera that looks at the model, and the camera that looks at the canvas.
-	public Sprite cursorPaint,cursorDecal; // Cursor for the differen functions 
-	public RenderTexture canvasTexture; // Render Texture that looks at our Base Texture and the painted brushes
-	public Material baseMaterial; // The material of our base texture (Were we will save the painted texture)
+    public Camera sceneCamera,canvasCam;  
+	public Sprite cursorPaint,cursorDecal; 
+	public RenderTexture canvasTexture; 
+	public Material baseMaterial; 
 	public FlexibleColorPicker colorPicker;
 
-	Painter_BrushMode mode; //Our painter mode (Paint brushes or decals)
-	float brushSize=1.0f; //The size of our brush
-	Color brushColor; //The selected color
-	int brushCounter=0,MAX_BRUSH_COUNT=1000; //To avoid having millions of brushes
-	bool saving=false; //Flag to check if we are saving the texture
+	Painter_BrushMode mode; 
+	float brushSize=1.0f; 
+	Color brushColor; 
+	int brushCounter=0,MAX_BRUSH_COUNT=1000; 
+	bool saving=false; 
 
 
     void Update () {
-		brushColor = colorPicker.color; //ColorSelector.GetColor ();	//Updates our painted color with the selected color
+		brushColor = colorPicker.color;
         var inputDevices = new List<UnityEngine.XR.InputDevice>();
         UnityEngine.XR.InputDevices.GetDevices(inputDevices);
-        float triggerValue = pinchAnimationAction.action.ReadValue<float>();
-        if (triggerValue > 0.3f)
+        //float triggerValue = pinchAnimationAction.action.ReadValue<float>();
+        if (pinchAnimationAction.action.ReadValue<float>() > 0.3f)
 		{
             DoAction(0.5f);
 			animator.SetBool("isSpray", true);
             audio.Play();
             particleSystem.Play();
         }
-        if (triggerValue > 0.5f)
+        if (pinchAnimationAction.action.ReadValue<float>() > 0.5f)
         {
             DoAction(0.7f);
             animator.SetBool("isSpray", true);
             audio.Play();
             particleSystem.Play();
         }
-        if (triggerValue > 0.7f)
+        if (pinchAnimationAction.action.ReadValue<float>() > 0.7f)
         {
             DoAction(1.5f);
             animator.SetBool("isSpray", true);
@@ -76,7 +69,7 @@ public class SprayTexturePainter : MonoBehaviour {
         //UpdateBrushCursor ();
     }
 
-	//The main action, instantiates a brush or decal entity at the clicked position on the UV map
+	
 	public void DoAction(float max){	
 		if (saving)
 			return;
@@ -93,15 +86,15 @@ public class SprayTexturePainter : MonoBehaviour {
 			brushObj.transform.localPosition=uvWorldPosition; //The position of the brush (in the UVMap)
 			brushObj.transform.localScale=Vector3.one*brushSize;//The size of the brush
 		}
-		brushCounter++; //Add to the max brushes
-		if (brushCounter >= MAX_BRUSH_COUNT) { //If we reach the max brushes available, flatten the texture and clear the brushes
+		brushCounter++; 
+		if (brushCounter >= MAX_BRUSH_COUNT) { 
 			brushCursor.SetActive (false);
 			saving=true;
 			Invoke("SaveTexture",0.1f);
 			
 		}
 	}
-	//To update at realtime the painting cursor on the mesh
+	
 	void UpdateBrushCursor(){
 		Vector3 uvWorldPosition=Vector3.zero;
 		if (HitTestUVPosition (ref uvWorldPosition) && !saving) {
@@ -111,7 +104,7 @@ public class SprayTexturePainter : MonoBehaviour {
 			brushCursor.SetActive(false);
 		}		
 	}
-	//Returns the position on the texuremap according to a hit in the mesh collider
+	
 	bool HitTestUVPosition(ref Vector3 uvWorldPosition){
 		RaycastHit hit;
 		//Vector3 cursorPos = new Vector3 (Input.mousePosition.x, Input.mousePosition.y, 0.0f);
@@ -124,8 +117,8 @@ public class SprayTexturePainter : MonoBehaviour {
 			if (meshCollider == null || meshCollider.sharedMesh == null)
 				return false;			
 			Vector2 pixelUV  = new Vector2(hit.textureCoord.x,hit.textureCoord.y);
-			uvWorldPosition.x=pixelUV.x-canvasCam.orthographicSize;//To center the UV on X
-			uvWorldPosition.y=pixelUV.y-canvasCam.orthographicSize;//To center the UV on Y
+			uvWorldPosition.x=pixelUV.x-canvasCam.orthographicSize;
+			uvWorldPosition.y=pixelUV.y-canvasCam.orthographicSize;
 			uvWorldPosition.z=0.0f;
 			return true;
 		}
@@ -134,7 +127,7 @@ public class SprayTexturePainter : MonoBehaviour {
 		}
 		
 	}
-	//Sets the base material with a our canvas texture, then removes all our brushes
+	
 	void SaveTexture(){		
 		brushCounter=0;
 		System.DateTime date = System.DateTime.Now;
@@ -143,30 +136,30 @@ public class SprayTexturePainter : MonoBehaviour {
 		tex.ReadPixels (new Rect (0, 0, canvasTexture.width, canvasTexture.height), 0, 0);
 		tex.Apply ();
 		RenderTexture.active = null;
-		baseMaterial.mainTexture =tex;	//Put the painted texture as the base
-		foreach (Transform child in brushContainer.transform) {//Clear brushes
+		baseMaterial.mainTexture =tex;	
+		foreach (Transform child in brushContainer.transform) {
 			Destroy(child.gameObject);
 		}
-		//StartCoroutine ("SaveTextureToFile"); //Do you want to save the texture? This is your method!
+		//StartCoroutine ("SaveTextureToFile");
 		Invoke ("ShowCursor", 0.1f);
 	}
-	//Show again the user cursor (To avoid saving it to the texture)
+	
 	void ShowCursor(){	
 		saving = false;
 	}
 
-	////////////////// PUBLIC METHODS //////////////////
 
-	public void SetBrushMode(Painter_BrushMode brushMode){ //Sets if we are painting or placing decals
+
+	public void SetBrushMode(Painter_BrushMode brushMode){ 
 		mode = brushMode;
 		brushCursor.GetComponent<SpriteRenderer> ().sprite = brushMode == Painter_BrushMode.PAINT ? cursorPaint : cursorDecal;
 	}
-	public void SetBrushSize(float newBrushSize){ //Sets the size of the cursor brush or decal
+	public void SetBrushSize(float newBrushSize){ 
 		brushSize = newBrushSize;
 		brushCursor.transform.localScale = Vector3.one * brushSize;
 	}
 
-	////////////////// OPTIONAL METHODS //////////////////
+
 
 	#if !UNITY_WEBPLAYER 
 		IEnumerator SaveTextureToFile(Texture2D savedTexture){		
