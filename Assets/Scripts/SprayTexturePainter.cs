@@ -1,11 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
-using UnityEngine.XR;
-using UnityEngine.InputSystem.XR;
-using System.Collections.Generic;
-using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.InputSystem;
+//using UnityEditor.Rendering.LookDev;
 
 //public enum Painter_BrushMode{PAINT,DECAL};
 public class SprayTexturePainter : MonoBehaviour {
@@ -23,77 +20,122 @@ public class SprayTexturePainter : MonoBehaviour {
 	public Material baseMaterial; 
 	public FlexibleColorPicker colorPicker;
 
+	bool isgrabbed = true;
+	bool isAudioPlayed = false;
+
 	Painter_BrushMode mode; 
-	float brushSize=1.0f; 
+	public float brushSize=.1f; 
 	Color brushColor; 
 	int brushCounter=0,MAX_BRUSH_COUNT=1000; 
-	bool saving=false; 
-
+	bool saving=false;
+    private void Start()
+    {
+		SetBrushSize(.03f);
+    }
 
     void Update () {
 		brushColor = colorPicker.color;
-        var inputDevices = new List<UnityEngine.XR.InputDevice>();
-        UnityEngine.XR.InputDevices.GetDevices(inputDevices);
-        //float triggerValue = pinchAnimationAction.action.ReadValue<float>();
-        if (pinchAnimationAction.action.ReadValue<float>() > 0.3f)
+		//var inputDevices = new List<UnityEngine.XR.InputDevice>();
+		//UnityEngine.XR.InputDevices.GetDevices(inputDevices);
+		//float triggerValue = pinchAnimationAction.action.ReadValue<float>();
+		if (isgrabbed== true)
 		{
-            DoAction(0.5f);
-			animator.SetBool("isSpray", true);
-            audio.Play();
-            particleSystem.Play();
+			if (pinchAnimationAction.action.triggered && !audio.isPlaying)
+			{
+				audio.Play();
+			}
+			if (pinchAnimationAction.action.ReadValue<float>() > 0.3f && pinchAnimationAction.action.ReadValue<float>() < 0.5f)
+            {
+				
+                particleSystem.Play();
+                
+                Debug.Log(pinchAnimationAction.action.ReadValue<float>());
+
+                DoAction(0.2f);
+                animator.SetBool("isSpray", true);
+
+            }
+            else if (pinchAnimationAction.action.ReadValue<float>() >= 0.5f && pinchAnimationAction.action.ReadValue<float>() < 0.7f)
+            {
+
+                
+                particleSystem.Play();
+                
+
+                DoAction(0.5f);
+                animator.SetBool("isSpray", true);
+
+            }
+            else if (pinchAnimationAction.action.ReadValue<float>() >= 0.7f)
+            {    
+
+                
+
+                particleSystem.Play();
+                
+
+                DoAction(1f);
+                animator.SetBool("isSpray", true);
+
+            }
+
+            else
+            {
+                particleSystem.Stop();
+                audio.Stop();
+				isAudioPlayed = false;
+
+                animator.SetBool("isSpray", false);
+
+            }
+
+
         }
-        if (pinchAnimationAction.action.ReadValue<float>() > 0.5f)
-        {
-            DoAction(0.7f);
-            animator.SetBool("isSpray", true);
-            audio.Play();
-            particleSystem.Play();
-        }
-        if (pinchAnimationAction.action.ReadValue<float>() > 0.7f)
-        {
-            DoAction(1.5f);
-            animator.SetBool("isSpray", true);
-            audio.Play();
-            particleSystem.Play();
-        }
-        else
-		{
-            animator.SetBool("isSpray", false);
-            audio.Stop();
-            particleSystem.Stop();
-        }
-        
+        //particleSystem.Stop();
         //if (Input.GetMouseButton(0)) {
 
         //}
-        //UpdateBrushCursor ();
+        UpdateBrushCursor ();
     }
-
 	
-	public void DoAction(float max){	
+	
+	public void IsGunGrab(bool isgrab)
+	{
+		isgrabbed = isgrab;
+
+		Debug.Log("isplay");
+    }
+    
+    public void DoAction(float max){	
 		if (saving)
 			return;
 		Vector3 uvWorldPosition=Vector3.zero;		
 		if(HitTestUVPosition(ref uvWorldPosition)){
 			GameObject brushObj;
+            brushColor.a = brushSize * max *23; // Brushes have alpha to have a merging effect when painted over.
 
-			brushObj=(GameObject)Instantiate(Resources.Load("TexturePainter-Instances/BrushEntity")); //Paint a brush
+            brushObj = (GameObject)Instantiate(Resources.Load("TexturePainter-Instances/BrushEntity")); //Paint a brush
 			brushObj.GetComponent<SpriteRenderer>().color=brushColor; //Set the brush color
-            
 
-            brushColor.a=brushSize*max; // Brushes have alpha to have a merging effect when painted over.
+            //brushColor.a = .1f;
 			brushObj.transform.parent=brushContainer.transform; //Add the brush to our container to be wiped later
 			brushObj.transform.localPosition=uvWorldPosition; //The position of the brush (in the UVMap)
+            float zRotation = rcontroller.transform.localRotation.eulerAngles.z;
+            brushObj.transform.localRotation= Quaternion.Euler(0f, 0f, zRotation); ;
 			brushObj.transform.localScale=Vector3.one*brushSize;//The size of the brush
+
+			
 		}
 		brushCounter++; 
 		if (brushCounter >= MAX_BRUSH_COUNT) { 
 			brushCursor.SetActive (false);
 			saving=true;
-			Invoke("SaveTexture",0.1f);
-			
-		}
-	}
+            //Invoke("SaveTexture",0.1f);
+            brushCounter = 0;
+
+            Invoke("ShowCursor", 0.1f);
+        }
+    }
 	
 	void UpdateBrushCursor(){
 		Vector3 uvWorldPosition=Vector3.zero;
@@ -107,12 +149,13 @@ public class SprayTexturePainter : MonoBehaviour {
 	
 	bool HitTestUVPosition(ref Vector3 uvWorldPosition){
 		RaycastHit hit;
-		//Vector3 cursorPos = new Vector3 (Input.mousePosition.x, Input.mousePosition.y, 0.0f);
+		//Vector3 cursorPos = new Vector3 (rcontroller.transform.position.x, rcontroller.transform.position.y, 0.0f);
 		//Ray cursorRay=sceneCamera.ScreenPointToRay (cursorPos);
+
 
 		Ray cursorRay = new Ray(rcontroller.transform.position, rcontroller.transform.forward);
 		Debug.DrawRay(rcontroller.transform.position, rcontroller.transform.up);
-		if (Physics.Raycast(cursorRay,out hit,100)){
+		if (Physics.Raycast(cursorRay,out hit,3)){
 			MeshCollider meshCollider = hit.collider as MeshCollider;
 			if (meshCollider == null || meshCollider.sharedMesh == null)
 				return false;			
@@ -143,7 +186,13 @@ public class SprayTexturePainter : MonoBehaviour {
 		//StartCoroutine ("SaveTextureToFile");
 		Invoke ("ShowCursor", 0.1f);
 	}
-	
+	public void clear()
+	{
+        foreach (Transform child in brushContainer.transform)
+        {
+            Destroy(child.gameObject);
+        }
+    }
 	void ShowCursor(){	
 		saving = false;
 	}

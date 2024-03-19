@@ -12,4 +12,8 @@ public class BrushSizeManager : MonoBehaviour
     {
         painter.SetBrushSize(sizeSlider.value);
     }
+    public void UpdateBrushSize(float value)
+    {
+        painter.SetBrushSize((float)value);
+    }
 }

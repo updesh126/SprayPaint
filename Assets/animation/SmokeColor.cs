@@ -6,9 +6,12 @@ public class SmokeColor : MonoBehaviour
 {
     public FlexibleColorPicker fcp;
     public Material mat;
+    public ParticleSystem pat;
 
     private void Update()
     {
-        mat.color = fcp.color;
+        pat.startColor= fcp.color;
+        
+       mat.color = fcp.color;
     }
 }
