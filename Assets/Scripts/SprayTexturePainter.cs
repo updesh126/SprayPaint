@@ -18,7 +18,7 @@ public class SprayTexturePainter : MonoBehaviour {
 	public Sprite cursorPaint,cursorDecal; 
 	public RenderTexture canvasTexture; 
 	public Material baseMaterial; 
-	public FlexibleColorPicker colorPicker;
+	//public FlexibleColorPicker colorPicker;
 
 	bool isgrabbed = true;
 	bool isAudioPlayed = false;
