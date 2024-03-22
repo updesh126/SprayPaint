@@ -28,13 +28,15 @@ public class SprayTexturePainter : MonoBehaviour {
 	Color brushColor; 
 	int brushCounter=0,MAX_BRUSH_COUNT=1000; 
 	bool saving=false;
+
+    #region Unity Default
     private void Start()
     {
 		SetBrushSize(.03f);
     }
 
     void Update () {
-		brushColor = colorPicker.color;
+		//brushColor = colorPicker.color;
 		//var inputDevices = new List<UnityEngine.XR.InputDevice>();
 		//UnityEngine.XR.InputDevices.GetDevices(inputDevices);
 		//float triggerValue = pinchAnimationAction.action.ReadValue<float>();
@@ -97,22 +99,33 @@ public class SprayTexturePainter : MonoBehaviour {
         //}
         UpdateBrushCursor ();
     }
-	
-	
-	public void IsGunGrab(bool isgrab)
+
+    #endregion
+
+
+    #region Unity Custom Functions
+    public void IsGunGrab(bool isgrab)
 	{
 		isgrabbed = isgrab;
 
 		Debug.Log("isplay");
     }
-    
+
+	public void SelectColor(Color color)
+	{
+        brushColor=color;
+
+    }
+    #endregion
+
+    #region Unity Textures
     public void DoAction(float max){	
 		if (saving)
 			return;
 		Vector3 uvWorldPosition=Vector3.zero;		
 		if(HitTestUVPosition(ref uvWorldPosition)){
 			GameObject brushObj;
-            brushColor.a = brushSize * max *23; // Brushes have alpha to have a merging effect when painted over.
+            //brushColor.a = brushSize * max *23; // Brushes have alpha to have a merging effect when painted over.
 
             brushObj = (GameObject)Instantiate(Resources.Load("TexturePainter-Instances/BrushEntity")); //Paint a brush
 			brushObj.GetComponent<SpriteRenderer>().color=brushColor; //Set the brush color
@@ -207,11 +220,11 @@ public class SprayTexturePainter : MonoBehaviour {
 		brushSize = newBrushSize;
 		brushCursor.transform.localScale = Vector3.one * brushSize;
 	}
+    #endregion
 
 
-
-	#if !UNITY_WEBPLAYER 
-		IEnumerator SaveTextureToFile(Texture2D savedTexture){		
+#if !UNITY_WEBPLAYER
+    IEnumerator SaveTextureToFile(Texture2D savedTexture){		
 			brushCounter=0;
 			string fullPath=System.IO.Directory.GetCurrentDirectory()+"\\UserCanvas\\";
 			System.DateTime date = System.DateTime.Now;
